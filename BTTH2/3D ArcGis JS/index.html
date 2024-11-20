@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8" />
+	<meta name="viewport"
+		content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+	<title>3D - Building Map</title>
+
+	<style>
+		html, body, #viewDiv {
+			padding: 0;
+			margin: 0;
+			height: 100%;
+			width: 100%;
+		}
+/*⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇----BELOW WILL BE DELETED *** DON'T TOUCH IT----⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇*/
+#sketchfabEmbed {
+			display: none;
+			position: absolute;
+			top: 8%;
+			right: 2%;
+			border: 1px solid #ccc;
+			background-color: white;	
+			padding: 10px;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+			z-index: 10;
+		}
+		#showEmbedButton {
+			position: absolute;
+			top: 2%;
+			right: 2%;
+			padding: 10px 20px;
+			font-size: 16px;
+			cursor: pointer;
+			background-color: #0079c1;
+			color: white;
+			border: none;
+			border-radius: 4px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+		}
+/*⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆----ABOVE WILL BE DELETED *** DON'T TOUCH IT----⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆*/
+	</style>
+
+	<link rel="stylesheet"
+		href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+
+	<script src="https://js.arcgis.com/4.29/"></script>
+
+	<script>
+		require([
+			"esri/Map",
+			"esri/views/SceneView",
+			"esri/layers/GraphicsLayer",
+			"esri/Graphic",
+			"esri/request",
+			"esri/geometry/Polygon",
+			"esri/symbols/PolygonSymbol3D",
+		], function (Map, SceneView, GraphicsLayer, Graphic, esriRequest, Polygon, PolygonSymbol3D, extrude){
+
+			const map = new Map({
+				// basemap: "satellite",
+				// ground: "world-elevation",
+			});
+
+			const view = new SceneView({
+				container: "viewDiv",
+				map: map,
+				camera: {
+					//font view
+					position: [-71.05462372021078,42.3601881915676, 40],
+					heading: 262,
+					tilt: 80
+
+					// // left view
+					// position: [-71.05601733051918, 42.35900117963136, 40],
+					// heading: 352,
+					// tilt: 80
+
+					// // right view
+					// position: [-71.05646153743453, 42.3611362239252, 40],
+					// heading: 172,
+					// tilt: 80
+
+					// // //back view
+					// position: [-71.05761381455338, 42.35987119212082, 40],
+					// heading: 82,
+					// tilt: 80
+				}
+			});
+
+			// Function to load GeoJSON and create graphics
+			const loadGeoJsonFile = function(file) {
+				esriRequest(file, {
+					responseType: "json"
+				}).then(function(response) {
+					const graphicsLayer = new GraphicsLayer();
+					const features = response.data.features;
+
+					features.forEach(function(feature) {
+						const polygon = new Polygon({
+							rings: feature.geometry.coordinates
+						});
+
+						const symbol = new PolygonSymbol3D({
+							symbolLayers: [{
+								type: "extrude",
+                material: {
+                  color: feature.properties.color
+                },
+								size: feature.properties.height,
+                edges: {
+                  type: feature.properties.outline.type,
+                  color: feature.properties.outline.color,
+                  size: feature.properties.outline.size
+                },
+							}]
+						});
+
+						const graphic = new Graphic({
+							geometry: polygon,
+							symbol: symbol,
+							attributes: feature.properties
+						});
+
+						graphicsLayer.add(graphic);
+					});
+
+					map.add(graphicsLayer);
+				});
+			};
+
+//⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇----LOADING GEOJSON FILES AREA----⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇
+			loadGeoJsonFile("./model/firstFloor.geojson");
+			loadGeoJsonFile("./model/secondFloor.geojson");
+			loadGeoJsonFile("./model/thirdFloor.geojson");
+			loadGeoJsonFile("./model/Roof/roof.geojson");
+			loadGeoJsonFile("./model/Roof/colOnTop.geojson");
+
+			loadGeoJsonFile("./model/RightWindow/rightWindow.geojson")
+
+			loadGeoJsonFile("./model/Pillar/connerCol.geojson")
+			loadGeoJsonFile("./model/Pillar/fontCol.geojson")
+			loadGeoJsonFile("./model/Pillar/backCol.geojson")
+			loadGeoJsonFile("./model/Pillar/leftCol.geojson")
+			loadGeoJsonFile("./model/Pillar/rightCol.geojson")
+
+			loadGeoJsonFile("./model/LeftWindow/leftWindow.geojson")
+
+			loadGeoJsonFile("./model/FrontWindow/frontWindow.geojson")
+
+			loadGeoJsonFile("./model/BackWindow/backWindow.geojson")
+
+			
+
+
+		
+
+//⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆----LOADING GEOJSON FILES AREA----⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
+
+//⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇----BELOW WILL BE DELETED *** DON'T TOUCH IT----⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇
+      document.getElementById("showEmbedButton").onclick = function() {
+        const embedDiv = document.getElementById("sketchfabEmbed");
+        embedDiv.style.display = embedDiv.style.display === "none" ? "block" : "none";
+      };
+
+      document.getElementById("closeEmbed").onclick = function() {
+        document.getElementById("sketchfabEmbed").style.display = "none";
+      };
+//⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆----ABOVE WILL BE DELETED *** DON'T TOUCH IT----⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
+		});
+	</script>
+</head>
+
+<body>
+	<div id="viewDiv"></div>
+
+<!--⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇----BELOW WILL BE DELETED *** DON'T TOUCH IT----⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇-->
+	<button id="showEmbedButton">Show 3D Model</button>
+
+	<div id="sketchfabEmbed">
+		<button id="closeEmbed" style="float: right;">X</button>
+		<div class="sketchfab-embed-wrapper">
+			<iframe title="Faneuil Hall Visitor Center" allowfullscreen 
+					mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking"
+					xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share
+					width="600" height="500" 
+					src="https://sketchfab.com/models/adfda802aaa24c19a3fb1379f2b8ee87/embed">
+			</iframe>
+			</p>
+		</div>
+	</div>
+<!--⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆----ABOVE WILL BE DELETED *** DON'T TOUCH IT----⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆-->
+</body>
+</html>
